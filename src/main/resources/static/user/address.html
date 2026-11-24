@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>地址管理</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <header class="user-header">
+    <h3>地址管理</h3>
+    <nav style="display:flex;gap:16px;font-size:14px">
+      <a href="/user/index.html">首页</a>
+      <a href="/user/cart.html">购物车</a>
+      <a href="/user/orders.html">我的订单</a>
+      <a href="/user/address.html">地址管理</a>
+      <a href="javascript:logout()">退出</a>
+    </nav>
+  </header>
+
+  <div class="card" style="margin:20px">
+    <div class="toolbar">
+      <button class="btn btn-green" onclick="openAdd()">新增地址</button>
+    </div>
+    <table>
+      <thead><tr><th>收货人</th><th>电话</th><th>标签</th><th>详细地址</th><th>默认</th><th>操作</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);align-items:center;justify-content:center;">
+    <div class="card" style="width:380px">
+      <h3 id="modalTitle" style="margin-bottom:16px">新增地址</h3>
+      <div class="form-item"><label>收货人</label><input id="consignee"></div>
+      <div class="form-item"><label>手机号</label><input id="phone"></div>
+      <div class="form-item">
+        <label>性别</label>
+        <select id="sex"><option value="1">男</option><option value="0">女</option></select>
+      </div>
+      <div class="form-item"><label>省份</label><input id="province"></div>
+      <div class="form-item"><label>城市</label><input id="city"></div>
+      <div class="form-item"><label>区县</label><input id="district"></div>
+      <div class="form-item"><label>详细地址</label><input id="detail"></div>
+      <div class="form-item">
+        <label>标签</label>
+        <select id="label"><option>家</option><option>公司</option><option>学校</option></select>
+      </div>
+      <div class="form-item">
+        <label><input type="checkbox" id="isDefault"> 设为默认地址</label>
+      </div>
+      <div class="row">
+        <button class="btn" onclick="save()">保存</button>
+        <button class="btn btn-plain" onclick="closeModal()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/common.js"></script>
+  <script>
+    let editId = null;
+
+    async function loadList() {
+      const list = await request('/address/list');
+      document.getElementById('tbody').innerHTML = list.map(a => `
+        <tr>
+          <td>${a.consignee}</td>
+          <td>${a.phone}</td>
+          <td>${a.label || '-'}</td>
+          <td>${a.province || ''}${a.city || ''}${a.district || ''}${a.detail || ''}</td>
+          <td>${a.isDefault === 1 ? '<span class="tag tag-on">默认</span>' : '-'}</td>
+          <td>
+            ${a.isDefault !== 1 ? `<button class="btn btn-sm" onclick="setDefault(${a.id})">设为默认</button>` : ''}
+            <button class="btn btn-sm" onclick='openEdit(${JSON.stringify(a)})'>编辑</button>
+            <button class="btn btn-sm btn-plain" onclick="remove(${a.id})">删除</button>
+          </td>
+        </tr>`).join('');
+    }
+
+    function openAdd() {
+      editId = null;
+      document.getElementById('modalTitle').innerText = '新增地址';
+      ['consignee','phone','province','city','district','detail'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('sex').value = '1';
+      document.getElementById('label').value = '家';
+      document.getElementById('isDefault').checked = false;
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function openEdit(a) {
+      editId = a.id;
+      document.getElementById('modalTitle').innerText = '编辑地址';
+      document.getElementById('consignee').value = a.consignee;
+      document.getElementById('phone').value = a.phone;
+      document.getElementById('sex').value = a.sex;
+      document.getElementById('province').value = a.province || '';
+      document.getElementById('city').value = a.city || '';
+      document.getElementById('district').value = a.district || '';
+      document.getElementById('detail').value = a.detail || '';
+      document.getElementById('label').value = a.label || '家';
+      document.getElementById('isDefault').checked = a.isDefault === 1;
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+    async function save() {
+      const body = {
+        id: editId,
+        consignee: document.getElementById('consignee').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        sex: document.getElementById('sex').value,
+        province: document.getElementById('province').value.trim(),
+        city: document.getElementById('city').value.trim(),
+        district: document.getElementById('district').value.trim(),
+        detail: document.getElementById('detail').value.trim(),
+        label: document.getElementById('label').value,
+        isDefault: document.getElementById('isDefault').checked ? 1 : 0
+      };
+      if (!body.consignee || !body.phone || !body.detail) { alert('请填写收货人、电话和详细地址'); return; }
+      if (editId) await put('/address', body); else await post('/address', body);
+      closeModal();
+      loadList();
+    }
+
+    async function setDefault(id) {
+      await put(`/address/default/${id}`, {});
+      loadList();
+    }
+
+    async function remove(id) {
+      if (!confirm('确定删除该地址吗？')) return;
+      await del(`/address/${id}`);
+      loadList();
+    }
+
+    async function logout() {
+      await post('/user/logout', {});
+      location.href = '/user/login.html';
+    }
+
+    loadList();
+  </script>
+</body>
+</html>

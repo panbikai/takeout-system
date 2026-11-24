@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>后台管理首页</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="logo">外卖管理系统</div>
+      <ul>
+        <li><a href="category.html" target="mainFrame">分类管理</a></li>
+        <li><a href="dish.html" target="mainFrame">菜品管理</a></li>
+        <li><a href="setmeal.html" target="mainFrame">套餐管理</a></li>
+        <li><a href="orders.html" target="mainFrame">订单管理</a></li>
+        <li><a href="employee.html" target="mainFrame">员工管理</a></li>
+        <li><a href="javascript:logout()">退出登录</a></li>
+      </ul>
+    </aside>
+    <main class="main">
+      <iframe name="mainFrame" src="category.html" style="width:100%;height:calc(100vh - 40px);border:none;"></iframe>
+    </main>
+  </div>
+  <script src="/common.js"></script>
+  <script>
+    async function logout() {
+      if (confirm('确定退出登录吗？')) {
+        await post('/employee/logout', {});
+        location.href = '/admin/login.html';
+      }
+    }
+  </script>
+</body>
+</html>

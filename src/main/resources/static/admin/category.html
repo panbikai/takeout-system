@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>分类管理</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <div class="card">
+    <div class="topbar"><h3>分类管理</h3></div>
+    <div class="toolbar">
+      <select id="typeFilter" onchange="loadList()">
+        <option value="">全部类型</option>
+        <option value="1">菜品分类</option>
+        <option value="2">套餐分类</option>
+      </select>
+      <input id="nameFilter" placeholder="分类名称" onkeydown="if(event.key==='Enter')loadList()">
+      <button class="btn" onclick="loadList()">查询</button>
+      <button class="btn btn-green" onclick="openAdd()">新增分类</button>
+    </div>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>分类名称</th><th>类型</th><th>排序</th><th>状态</th><th>创建时间</th><th>操作</th></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- 新增 / 编辑弹层 -->
+  <div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);align-items:center;justify-content:center;">
+    <div class="card" style="width:360px">
+      <h3 id="modalTitle" style="margin-bottom:16px">新增分类</h3>
+      <div class="form-item"><label>分类名称</label><input id="name"></div>
+      <div class="form-item">
+        <label>类型</label>
+        <select id="type">
+          <option value="1">菜品分类</option>
+          <option value="2">套餐分类</option>
+        </select>
+      </div>
+      <div class="form-item"><label>排序号</label><input id="sort" type="number" value="0"></div>
+      <div class="row">
+        <button class="btn" onclick="save()">保存</button>
+        <button class="btn btn-plain" onclick="closeModal()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/common.js"></script>
+  <script>
+    let editId = null;
+
+    async function loadList() {
+      const type = document.getElementById('typeFilter').value;
+      const name = document.getElementById('nameFilter').value.trim();
+      const list = await request(`/category/list?type=${type || ''}&name=${name}`);
+      const tbody = document.getElementById('tbody');
+      tbody.innerHTML = list.map(c => `
+        <tr>
+          <td>${c.id}</td>
+          <td>${c.name}</td>
+          <td>${c.type === 1 ? '菜品分类' : '套餐分类'}</td>
+          <td>${c.sort}</td>
+          <td><span class="tag ${c.status === 1 ? 'tag-on' : 'tag-off'}">${c.status === 1 ? '启用' : '禁用'}</span></td>
+          <td>${fmtTime(c.createTime)}</td>
+          <td>
+            <button class="btn btn-sm" onclick="openEdit(${c.id},'${c.name}',${c.type},${c.sort})">修改</button>
+            <button class="btn btn-sm btn-gray" onclick="toggleStatus(${c.id},${c.status})">${c.status === 1 ? '禁用' : '启用'}</button>
+            <button class="btn btn-sm btn-plain" onclick="remove(${c.id})">删除</button>
+          </td>
+        </tr>`).join('');
+    }
+
+    function openAdd() {
+      editId = null;
+      document.getElementById('modalTitle').innerText = '新增分类';
+      document.getElementById('name').value = '';
+      document.getElementById('type').value = '1';
+      document.getElementById('sort').value = 0;
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function openEdit(id, name, type, sort) {
+      editId = id;
+      document.getElementById('modalTitle').innerText = '修改分类';
+      document.getElementById('name').value = name;
+      document.getElementById('type').value = type;
+      document.getElementById('sort').value = sort;
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+    async function save() {
+      const body = {
+        name: document.getElementById('name').value.trim(),
+        type: Number(document.getElementById('type').value),
+        sort: Number(document.getElementById('sort').value)
+      };
+      if (!body.name) { alert('请输入分类名称'); return; }
+      if (editId) { body.id = editId; await put('/category', body); }
+      else { await post('/category', body); }
+      closeModal();
+      loadList();
+    }
+
+    async function toggleStatus(id, status) {
+      await put('/category', { id, status: status === 1 ? 0 : 1 });
+      loadList();
+    }
+
+    async function remove(id) {
+      if (!confirm('确定删除该分类吗？')) return;
+      await del(`/category/${id}`);
+      loadList();
+    }
+
+    loadList();
+  </script>
+</body>
+</html>

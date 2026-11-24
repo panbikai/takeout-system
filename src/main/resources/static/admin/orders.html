@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>订单管理</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <div class="card">
+    <div class="topbar"><h3>订单管理</h3></div>
+    <div class="toolbar">
+      <input id="numberFilter" placeholder="订单号" onkeydown="if(event.key==='Enter')loadList()">
+      <select id="statusFilter" onchange="loadList()">
+        <option value="">全部状态</option>
+        <option value="1">待付款</option>
+        <option value="2">待派送</option>
+        <option value="3">已派送</option>
+        <option value="4">已完成</option>
+        <option value="5">已取消</option>
+      </select>
+      <button class="btn" onclick="loadList()">查询</button>
+    </div>
+    <table>
+      <thead>
+        <tr><th>订单号</th><th>收货人</th><th>电话</th><th>收货地址</th><th>金额(元)</th><th>状态</th><th>下单时间</th><th>操作</th></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- 明细弹层 -->
+  <div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);align-items:center;justify-content:center;">
+    <div class="card" style="width:480px">
+      <h3 style="margin-bottom:12px">订单明细</h3>
+      <table>
+        <thead><tr><th>商品</th><th>数量</th><th>单价(元)</th></tr></thead>
+        <tbody id="detailBody"></tbody>
+      </table>
+      <div class="row" style="margin-top:16px">
+        <button class="btn btn-plain" onclick="closeModal()">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/common.js"></script>
+  <script>
+    const statusMap = { 1: '待付款', 2: '待派送', 3: '已派送', 4: '已完成', 5: '已取消' };
+
+    async function loadList() {
+      const status = document.getElementById('statusFilter').value;
+      const number = document.getElementById('numberFilter').value.trim();
+      const list = await request(`/employee/order/list?status=${status}&number=${number}`);
+      document.getElementById('tbody').innerHTML = list.map(o => `
+        <tr>
+          <td>${o.number}</td>
+          <td>${o.consignee || '-'}</td>
+          <td>${o.phone || '-'}</td>
+          <td>${o.address || '-'}</td>
+          <td>${fmtMoney(o.amount)}</td>
+          <td>${statusMap[o.status]}</td>
+          <td>${fmtTime(o.createTime)}</td>
+          <td>
+            <button class="btn btn-sm" onclick="viewDetail(${o.id})">明细</button>
+            <select id="st-${o.id}" style="padding:4px">
+              ${Object.keys(statusMap).map(k => `<option value="${k}" ${Number(k)===o.status?'selected':''}>${statusMap[k]}</option>`).join('')}
+            </select>
+            <button class="btn btn-sm btn-green" onclick="changeStatus(${o.id})">改状态</button>
+          </td>
+        </tr>`).join('');
+    }
+
+    async function viewDetail(id) {
+      const detail = await request(`/employee/order/${id}`);
+      document.getElementById('detailBody').innerHTML = (detail.orderDetails || []).map(d => `
+        <tr><td>${d.name}</td><td>${d.number}</td><td>${fmtMoney(d.amount)}</td></tr>`).join('');
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    async function changeStatus(id) {
+      const status = Number(document.getElementById(`st-${id}`).value);
+      await put('/employee/order/status', { id, status });
+      alert('订单状态已更新');
+      loadList();
+    }
+
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+    loadList();
+  </script>
+</body>
+</html>

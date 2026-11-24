@@ -1,0 +1,55 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: "Microsoft YaHei", Arial, sans-serif; background: #f5f6f8; color: #333; }
+a { text-decoration: none; color: inherit; }
+
+/* 登录页 */
+.login-wrap { width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #ff8a00, #ff5e3a); }
+.login-box { width: 380px; background: #fff; border-radius: 12px; padding: 36px 32px; box-shadow: 0 10px 30px rgba(0,0,0,.2); }
+.login-box h2 { text-align: center; margin-bottom: 24px; color: #ff5e3a; }
+.form-item { margin-bottom: 16px; }
+.form-item label { display: block; font-size: 14px; margin-bottom: 6px; color: #555; }
+.form-item input, .form-item select, .form-item textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+.btn { display: inline-block; padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer;
+  background: #ff5e3a; color: #fff; font-size: 14px; }
+.btn:hover { opacity: .9; }
+.btn-plain { background: #fff; color: #ff5e3a; border: 1px solid #ff5e3a; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-green { background: #2eae66; }
+.btn-gray { background: #888; }
+
+/* 后台框架 */
+.layout { display: flex; min-height: 100vh; }
+.sidebar { width: 200px; background: #2c3e50; color: #fff; }
+.sidebar .logo { padding: 20px; font-size: 16px; font-weight: bold; border-bottom: 1px solid #3d5166; }
+.sidebar ul { list-style: none; }
+.sidebar li a { display: block; padding: 14px 20px; font-size: 14px; }
+.sidebar li a:hover, .sidebar li a.active { background: #ff5e3a; }
+.main { flex: 1; padding: 20px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.topbar h3 { font-size: 18px; }
+
+/* 表格 */
+.card { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+th, td { padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 14px; text-align: center; }
+th { background: #fafafa; color: #555; }
+.toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+.toolbar input, .toolbar select { padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; }
+
+.tag { padding: 2px 10px; border-radius: 10px; font-size: 12px; }
+.tag-on { background: #e6f7ee; color: #2eae66; }
+.tag-off { background: #fdecea; color: #e74c3c; }
+
+/* 用户端 */
+.user-header { background: #ff5e3a; color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; }
+.category-bar { display: flex; gap: 10px; padding: 14px 20px; overflow-x: auto; background: #fff; }
+.category-bar span { padding: 6px 16px; border-radius: 16px; background: #f2f3f5; cursor: pointer; font-size: 14px; }
+.category-bar span.active { background: #ff5e3a; color: #fff; }
+.dish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; padding: 20px; }
+.dish-card { background: #fff; border-radius: 10px; padding: 16px; }
+.dish-card h4 { margin-bottom: 8px; }
+.dish-card .price { color: #ff5e3a; font-weight: bold; margin: 8px 0; }
+.muted { color: #999; font-size: 12px; }
+.row { display: flex; justify-content: space-between; align-items: center; }

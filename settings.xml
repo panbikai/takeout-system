@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+    <!-- 本地仓库位置（默认即可） -->
+    <localRepository>${user.home}/.m2/repository</localRepository>
+
+    <mirrors>
+        <!-- 阿里云公共仓库，替代默认中央仓库，加速国内下载 -->
+        <mirror>
+            <id>aliyun-public</id>
+            <mirrorOf>central</mirrorOf>
+            <name>Aliyun Public Repository</name>
+            <url>https://maven.aliyun.com/repository/public</url>
+        </mirror>
+    </mirrors>
+
+</settings>

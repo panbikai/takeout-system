@@ -1,0 +1,35 @@
+# ---------- 构建产物 ----------
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# ---------- IDE ----------
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+
+# ---------- 日志与临时文件 ----------
+*.log
+logs/
+*.tmp
+
+# ---------- 操作系统 ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- 本地敏感配置 ----------
+# 数据库账号密码等本地环境信息不入库，仓库只保留 application.yml.example
+src/main/resources/application.yml
+
+# ---------- 上传的图片 ----------
+upload/
+
+# ---------- 本地辅助数据 ----------
+.workbuddy/

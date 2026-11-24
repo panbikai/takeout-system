@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nnu.takeout.mapper.OrdersMapper">
+
+    <resultMap id="ordersMap" type="com.nnu.takeout.entity.Orders">
+        <id column="id" property="id"/>
+        <result column="number" property="number"/>
+        <result column="status" property="status"/>
+        <result column="user_id" property="userId"/>
+        <result column="address_book_id" property="addressBookId"/>
+        <result column="consignee" property="consignee"/>
+        <result column="phone" property="phone"/>
+        <result column="address" property="address"/>
+        <result column="remark" property="remark"/>
+        <result column="amount" property="amount"/>
+        <result column="pay_method" property="payMethod"/>
+        <result column="pay_status" property="payStatus"/>
+        <result column="create_time" property="createTime"/>
+        <result column="checkout_time" property="checkoutTime"/>
+        <result column="pay_time" property="payTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.nnu.takeout.entity.Orders" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO orders (number, status, user_id, address_book_id, consignee, phone, address, remark,
+                            amount, pay_method, pay_status, create_time, checkout_time, pay_time, update_time)
+        VALUES (#{number}, #{status}, #{userId}, #{addressBookId}, #{consignee}, #{phone}, #{address}, #{remark},
+                #{amount}, #{payMethod}, #{payStatus}, #{createTime}, #{checkoutTime}, #{payTime}, #{updateTime})
+    </insert>
+
+    <select id="list" resultMap="ordersMap">
+        SELECT * FROM orders
+        <where>
+            <if test="userId != null">AND user_id = #{userId}</if>
+            <if test="status != null">AND status = #{status}</if>
+            <if test="number != null and number != ''">AND number LIKE CONCAT('%', #{number}, '%')</if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="getById" resultMap="ordersMap">
+        SELECT * FROM orders WHERE id = #{id}
+    </select>
+
+    <update id="update" parameterType="com.nnu.takeout.entity.Orders">
+        UPDATE orders
+        <set>
+            <if test="status != null">status = #{status},</if>
+            <if test="payStatus != null">pay_status = #{payStatus},</if>
+            <if test="payTime != null">pay_time = #{payTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+</mapper>

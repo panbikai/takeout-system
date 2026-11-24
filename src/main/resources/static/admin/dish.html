@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>菜品管理</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <div class="card">
+    <div class="topbar"><h3>菜品管理</h3></div>
+    <div class="toolbar">
+      <input id="nameFilter" placeholder="菜品名称" onkeydown="if(event.key==='Enter')loadList()">
+      <select id="categoryFilter"><option value="">全部分类</option></select>
+      <select id="statusFilter">
+        <option value="">全部状态</option>
+        <option value="1">启售</option>
+        <option value="0">停售</option>
+      </select>
+      <button class="btn" onclick="loadList()">查询</button>
+      <button class="btn btn-green" onclick="openAdd()">新增菜品</button>
+    </div>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>菜品名称</th><th>所属分类</th><th>价格(元)</th><th>描述</th><th>状态</th><th>操作</th></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);align-items:center;justify-content:center;">
+    <div class="card" style="width:380px">
+      <h3 id="modalTitle" style="margin-bottom:16px">新增菜品</h3>
+      <div class="form-item"><label>菜品名称</label><input id="name"></div>
+      <div class="form-item"><label>所属分类</label><select id="categoryId"></select></div>
+      <div class="form-item"><label>价格(元)</label><input id="price" type="number" step="0.01" min="0"></div>
+      <div class="form-item"><label>描述</label><textarea id="description" rows="2"></textarea></div>
+      <div class="row">
+        <button class="btn" onclick="save()">保存</button>
+        <button class="btn btn-plain" onclick="closeModal()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/common.js"></script>
+  <script>
+    let editId = null;
+
+    async function loadCategories() {
+      const list = await request('/category/list?type=1');
+      const opts = list.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      document.getElementById('categoryFilter').innerHTML = '<option value="">全部分类</option>' + opts;
+      document.getElementById('categoryId').innerHTML = opts;
+    }
+
+    async function loadList() {
+      const name = document.getElementById('nameFilter').value.trim();
+      const categoryId = document.getElementById('categoryFilter').value;
+      const status = document.getElementById('statusFilter').value;
+      const list = await request(`/dish/list?name=${name}&categoryId=${categoryId}&status=${status}`);
+      document.getElementById('tbody').innerHTML = list.map(d => `
+        <tr>
+          <td>${d.id}</td>
+          <td>${d.name}</td>
+          <td>${d.categoryName || '-'}</td>
+          <td>${fmtMoney(d.price)}</td>
+          <td>${d.description || ''}</td>
+          <td><span class="tag ${d.status === 1 ? 'tag-on' : 'tag-off'}">${d.status === 1 ? '启售' : '停售'}</span></td>
+          <td>
+            <button class="btn btn-sm" onclick='openEdit(${JSON.stringify(d)})'>修改</button>
+            <button class="btn btn-sm ${d.status === 1 ? 'btn-gray' : 'btn-green'}" onclick="toggleStatus(${d.id},${d.status})">${d.status === 1 ? '停售' : '启售'}</button>
+            <button class="btn btn-sm btn-plain" onclick="remove(${d.id})">删除</button>
+          </td>
+        </tr>`).join('');
+    }
+
+    function openAdd() {
+      editId = null;
+      document.getElementById('modalTitle').innerText = '新增菜品';
+      document.getElementById('name').value = '';
+      document.getElementById('categoryId').value = '';
+      document.getElementById('price').value = '';
+      document.getElementById('description').value = '';
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function openEdit(d) {
+      editId = d.id;
+      document.getElementById('modalTitle').innerText = '修改菜品';
+      document.getElementById('name').value = d.name;
+      document.getElementById('categoryId').value = d.categoryId;
+      document.getElementById('price').value = d.price;
+      document.getElementById('description').value = d.description || '';
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+    async function save() {
+      const body = {
+        name: document.getElementById('name').value.trim(),
+        categoryId: Number(document.getElementById('categoryId').value),
+        price: document.getElementById('price').value,
+        description: document.getElementById('description').value.trim()
+      };
+      if (!body.name || !body.categoryId || !body.price) { alert('请填写完整菜品信息'); return; }
+      if (editId) body.id = editId;
+      if (editId) await put('/dish', body); else await post('/dish', body);
+      closeModal();
+      loadList();
+    }
+
+    async function toggleStatus(id, status) {
+      const target = status === 1 ? 0 : 1;
+      await request(`/dish/status/${target}?id=${id}`, { method: 'PUT' });
+      loadList();
+    }
+
+    async function remove(id) {
+      if (!confirm('确定删除该菜品吗？')) return;
+      await del(`/dish/${id}`);
+      loadList();
+    }
+
+    loadCategories().then(loadList);
+  </script>
+</body>
+</html>

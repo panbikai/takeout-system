@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>员工管理</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <div class="card">
+    <div class="topbar"><h3>员工管理</h3></div>
+    <div class="toolbar">
+      <input id="nameFilter" placeholder="员工姓名" onkeydown="if(event.key==='Enter')loadList()">
+      <button class="btn" onclick="loadList()">查询</button>
+      <button class="btn btn-green" onclick="openAdd()">新增员工</button>
+    </div>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>姓名</th><th>用户名</th><th>手机号</th><th>性别</th><th>状态</th><th>操作</th></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);align-items:center;justify-content:center;">
+    <div class="card" style="width:360px">
+      <h3 id="modalTitle" style="margin-bottom:16px">新增员工</h3>
+      <div class="form-item"><label>姓名</label><input id="name"></div>
+      <div class="form-item"><label>用户名</label><input id="username"></div>
+      <div class="form-item"><label>密码</label><input id="password" type="password"></div>
+      <div class="form-item"><label>手机号</label><input id="phone"></div>
+      <div class="form-item">
+        <label>性别</label>
+        <select id="sex"><option value="1">男</option><option value="0">女</option></select>
+      </div>
+      <div class="row">
+        <button class="btn" onclick="save()">保存</button>
+        <button class="btn btn-plain" onclick="closeModal()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/common.js"></script>
+  <script>
+    let editId = null;
+
+    async function loadList() {
+      const name = document.getElementById('nameFilter').value.trim();
+      const list = await request(`/employee/list?name=${name}`);
+      document.getElementById('tbody').innerHTML = list.map(e => `
+        <tr>
+          <td>${e.id}</td>
+          <td>${e.name}</td>
+          <td>${e.username}</td>
+          <td>${e.phone}</td>
+          <td>${e.sex === '1' ? '男' : '女'}</td>
+          <td><span class="tag ${e.status === 1 ? 'tag-on' : 'tag-off'}">${e.status === 1 ? '启用' : '禁用'}</span></td>
+          <td>
+            <button class="btn btn-sm" onclick='openEdit(${JSON.stringify(e)})'>修改</button>
+            <button class="btn btn-sm ${e.status === 1 ? 'btn-gray' : 'btn-green'}" onclick="toggleStatus(${e.id},${e.status})">${e.status === 1 ? '禁用' : '启用'}</button>
+          </td>
+        </tr>`).join('');
+    }
+
+    function openAdd() {
+      editId = null;
+      document.getElementById('modalTitle').innerText = '新增员工';
+      document.getElementById('name').value = '';
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('phone').value = '';
+      document.getElementById('sex').value = '1';
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function openEdit(e) {
+      editId = e.id;
+      document.getElementById('modalTitle').innerText = '修改员工';
+      document.getElementById('name').value = e.name;
+      document.getElementById('username').value = e.username;
+      document.getElementById('password').value = '';
+      document.getElementById('phone').value = e.phone;
+      document.getElementById('sex').value = e.sex;
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+    async function save() {
+      const body = {
+        id: editId,
+        name: document.getElementById('name').value.trim(),
+        username: document.getElementById('username').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        sex: document.getElementById('sex').value,
+        password: document.getElementById('password').value.trim()
+      };
+      if (!body.name || !body.username || !body.phone) { alert('请填写完整信息'); return; }
+      if (editId) await put('/employee', body); else await post('/employee', body);
+      closeModal();
+      loadList();
+    }
+
+    async function toggleStatus(id, status) {
+      await put('/employee', { id, status: status === 1 ? 0 : 1 });
+      loadList();
+    }
+
+    loadList();
+  </script>
+</body>
+</html>

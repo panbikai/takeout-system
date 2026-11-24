@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>点餐首页</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <header class="user-header">
+    <h3>外卖点餐</h3>
+    <nav style="display:flex;gap:16px;font-size:14px">
+      <a href="/user/index.html">首页</a>
+      <a href="/user/cart.html">购物车</a>
+      <a href="/user/orders.html">我的订单</a>
+      <a href="/user/address.html">地址管理</a>
+      <a href="javascript:logout()">退出</a>
+    </nav>
+  </header>
+
+  <div class="category-bar" id="categoryBar"></div>
+  <div class="dish-grid" id="dishGrid"></div>
+
+  <script src="/common.js"></script>
+  <script>
+    let currentCategoryId = null;
+
+    async function loadCategories() {
+      const list = await request('/user/category/list?type=1');
+      const bar = document.getElementById('categoryBar');
+      bar.innerHTML = list.map((c, i) =>
+        `<span data-id="${c.id}" class="${i === 0 ? 'active' : ''}" onclick="selectCategory(${c.id},this)">${c.name}</span>`
+      ).join('');
+      if (list.length > 0) {
+        currentCategoryId = list[0].id;
+        loadDishes(currentCategoryId);
+      }
+    }
+
+    function selectCategory(id, el) {
+      document.querySelectorAll('#categoryBar span').forEach(s => s.classList.remove('active'));
+      el.classList.add('active');
+      currentCategoryId = id;
+      loadDishes(id);
+    }
+
+    async function loadDishes(categoryId) {
+      const list = await request(`/user/dish/list?categoryId=${categoryId}`);
+      const grid = document.getElementById('dishGrid');
+      if (!list.length) { grid.innerHTML = '<p class="muted" style="padding:20px">该分类暂无菜品</p>'; return; }
+      grid.innerHTML = list.map(d => `
+        <div class="dish-card">
+          <h4>${d.name}</h4>
+          <p class="muted">${d.description || ''}</p>
+          <div class="row">
+            <span class="price">¥${fmtMoney(d.price)}</span>
+            <button class="btn btn-sm" onclick="addToCart(${d.id})">加入购物车</button>
+          </div>
+        </div>`).join('');
+    }
+
+    // 只提交商品 id 与数量，单价由后端查库回填
+    async function addToCart(dishId) {
+      await post('/cart/add', { dishId: dishId, number: 1 });
+      alert('已加入购物车');
+    }
+
+    async function logout() {
+      if (confirm('确定退出登录吗？')) {
+        await post('/user/logout', {});
+        location.href = '/user/login.html';
+      }
+    }
+
+    loadCategories();
+  </script>
+</body>
+</html>

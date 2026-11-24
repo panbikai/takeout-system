@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>购物车</title>
+  <link rel="stylesheet" href="/common.css">
+</head>
+<body>
+  <header class="user-header">
+    <h3>购物车</h3>
+    <nav style="display:flex;gap:16px;font-size:14px">
+      <a href="/user/index.html">首页</a>
+      <a href="/user/cart.html">购物车</a>
+      <a href="/user/orders.html">我的订单</a>
+      <a href="/user/address.html">地址管理</a>
+      <a href="javascript:logout()">退出</a>
+    </nav>
+  </header>
+
+  <div class="card" style="margin:20px">
+    <table>
+      <thead><tr><th>商品</th><th>单价(元)</th><th>数量</th><th>小计(元)</th><th>操作</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="row" style="margin-top:16px">
+      <span>合计：<b id="total" style="color:#ff5e3a">¥0.00</b></span>
+    </div>
+
+    <div class="form-item" style="margin-top:16px">
+      <label>收货地址</label>
+      <select id="addressId"></select>
+    </div>
+    <div class="form-item">
+      <label>备注</label>
+      <input id="remark" placeholder="口味偏好、送餐要求等">
+    </div>
+    <button class="btn" onclick="submitOrder()">提交结算</button>
+  </div>
+
+  <script src="/common.js"></script>
+  <script>
+    let carts = [];
+
+    async function loadCart() {
+      carts = await request('/cart/list');
+      const tbody = document.getElementById('tbody');
+      if (!carts.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="muted">购物车为空，去首页点餐吧</td></tr>';
+        document.getElementById('total').innerText = '¥0.00';
+        return;
+      }
+      tbody.innerHTML = carts.map(c => `
+        <tr>
+          <td>${c.name}</td>
+          <td>${fmtMoney(c.amount)}</td>
+          <td>
+            <button class="btn btn-sm btn-plain" onclick="changeNum(${c.id},${c.number - 1})">-</button>
+            ${c.number}
+            <button class="btn btn-sm btn-plain" onclick="changeNum(${c.id},${c.number + 1})">+</button>
+          </td>
+          <td>${fmtMoney(c.amount * c.number)}</td>
+          <td><button class="btn btn-sm btn-plain" onclick="removeItem(${c.id})">删除</button></td>
+        </tr>`).join('');
+      const total = carts.reduce((s, c) => s + Number(c.amount) * c.number, 0);
+      document.getElementById('total').innerText = '¥' + fmtMoney(total);
+    }
+
+    async function loadAddress() {
+      const list = await request('/address/list');
+      document.getElementById('addressId').innerHTML = list.map(a =>
+        `<option value="${a.id}">${a.consignee} ${a.phone} ${a.province || ''}${a.city || ''}${a.district || ''}${a.detail || ''}</option>`
+      ).join('');
+    }
+
+    async function changeNum(id, number) {
+      await put('/cart', { id, number });
+      loadCart();
+    }
+
+    async function removeItem(id) {
+      await del(`/cart/${id}`);
+      loadCart();
+    }
+
+    async function submitOrder() {
+      if (!carts.length) { alert('购物车为空'); return; }
+      const addressId = document.getElementById('addressId').value;
+      if (!addressId) { alert('请先添加收货地址'); return; }
+      const remark = document.getElementById('remark').value.trim();
+      await post('/user/order/submit', { addressBookId: Number(addressId), remark, payMethod: 1 });
+      alert('下单成功！');
+      location.href = '/user/orders.html';
+    }
+
+    async function logout() {
+      await post('/user/logout', {});
+      location.href = '/user/login.html';
+    }
+
+    loadAddress();
+    loadCart();
+  </script>
+</body>
+</html>

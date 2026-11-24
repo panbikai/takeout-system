@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nnu.takeout.mapper.ShoppingCartMapper">
+
+    <resultMap id="cartMap" type="com.nnu.takeout.entity.ShoppingCart">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="image" property="image"/>
+        <result column="user_id" property="userId"/>
+        <result column="dish_id" property="dishId"/>
+        <result column="setmeal_id" property="setmealId"/>
+        <result column="dish_flavor" property="dishFlavor"/>
+        <result column="number" property="number"/>
+        <result column="amount" property="amount"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="listByUserId" resultMap="cartMap">
+        SELECT * FROM shopping_cart WHERE user_id = #{userId} ORDER BY create_time DESC
+    </select>
+
+    <select id="getOne" resultMap="cartMap">
+        SELECT * FROM shopping_cart
+        WHERE user_id = #{userId}
+        <if test="dishId != null">AND dish_id = #{dishId}</if>
+        <if test="setmealId != null">AND setmeal_id = #{setmealId}</if>
+        LIMIT 1
+    </select>
+
+    <insert id="insert" parameterType="com.nnu.takeout.entity.ShoppingCart" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO shopping_cart (name, image, user_id, dish_id, setmeal_id, dish_flavor, number, amount, create_time)
+        VALUES (#{name}, #{image}, #{userId}, #{dishId}, #{setmealId}, #{dishFlavor}, #{number}, #{amount}, #{createTime})
+    </insert>
+
+    <update id="updateNumber" parameterType="com.nnu.takeout.entity.ShoppingCart">
+        UPDATE shopping_cart SET number = #{number} WHERE id = #{id}
+    </update>
+
+    <delete id="deleteByUserId">
+        DELETE FROM shopping_cart WHERE user_id = #{userId}
+    </delete>
+
+    <delete id="deleteById">
+        DELETE FROM shopping_cart WHERE id = #{id}
+    </delete>
+
+</mapper>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nnu.takeout.mapper.UserMapper">
+
+    <resultMap id="userMap" type="com.nnu.takeout.entity.User">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="phone" property="phone"/>
+        <result column="sex" property="sex"/>
+        <result column="id_number" property="idNumber"/>
+        <result column="avatar" property="avatar"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <select id="getByPhone" resultMap="userMap">
+        SELECT * FROM user WHERE phone = #{phone}
+    </select>
+
+    <insert id="insert" parameterType="com.nnu.takeout.entity.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (name, phone, sex, id_number, avatar, status)
+        VALUES (#{name}, #{phone}, #{sex}, #{idNumber}, #{avatar}, #{status})
+    </insert>
+
+</mapper>
